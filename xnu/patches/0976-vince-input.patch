@@ -627,8 +627,8 @@ index d2f4fa1..ea69eae 100644
 +	fLogicalH = SWEET_TOUCH_PANEL_H;
 +	fOffX = fOffY = 0;
 +#else
- 	fLogicalW = native ? 1080 : 1125;
- 	fLogicalH = native ? 2400 : 2436;
+ 	fLogicalW = native ? 1080 : 1170;
+ 	fLogicalH = native ? 2400 : 2532;
  	fOffX = ((fLogicalW - 1080) / 2) & ~3;           /* as SweetFramebuffer.cpp */
  	fOffY = (fLogicalH - 2400) / 2;
 +#endif
