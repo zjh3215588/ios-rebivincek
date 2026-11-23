@@ -14,7 +14,7 @@ mapping or the GPU still holds it waits until they let go.
  }
  
 +/*
-+ * gpu=1: contiguous buffers set aside for screen-sized surfaces (1125x2436 BGRA is 11 MB, 11.3 with
++ * gpu=1: contiguous buffers set aside for screen-sized surfaces (1170x2532 BGRA is 12 MB, 11.3 with
 + * the 64 guard rows), taken on the first surface while memory is still in one piece. Later an
 + * 11 MB contiguous allocation mostly failed: such a surface was not shared with the GPU, and eagl
 + * read each frame of it back (glReadPixels, 30-160 ms: the hitches in every blurred animation).
