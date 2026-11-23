@@ -1,7 +1,7 @@
 From 8a50d3b80c08889a84300ca44760fb1a6bb217c4 Mon Sep 17 00:00:00 2001
 From: x <x@x>
 Date: Mon, 19 Oct 2026 17:28:20 +0300
-Subject: [PATCH] topaz-0114: present the iPhone X screen (1125x2436) again,
+Subject: [PATCH] topaz-0114: present the iPhone X screen (1170x2532) again,
  16-byte aligned panel window
 
 ---
@@ -40,8 +40,8 @@ index 27bc49d..d2f4fa1 100644
 +++ b/iokit/Kernel/arm/hid/SweetHID.cpp
 @@ -436,7 +436,7 @@ SweetHIDTouch::start(IOService *provider)
  	PE_parse_boot_argn("sweetfb_native", &native, sizeof(native));
- 	fLogicalW = native ? 1080 : 1125;
- 	fLogicalH = native ? 2400 : 2436;
+ 	fLogicalW = native ? 1080 : 1170;
+ 	fLogicalH = native ? 2400 : 2532;
 -	fOffX = (fLogicalW - 1080) / 2;
 +	fOffX = ((fLogicalW - 1080) / 2) & ~3;           /* as SweetFramebuffer.cpp */
  	fOffY = (fLogicalH - 2400) / 2;
