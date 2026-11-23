@@ -22,7 +22,7 @@ index b043424..12e56c1 100644
 --- a/iokit/Kernel/arm/SweetFramebuffer.cpp
 +++ b/iokit/Kernel/arm/SweetFramebuffer.cpp
 @@ -148,6 +148,9 @@ enum {
- #define SWEET_FB_LOGICAL_H              2436
+ #define SWEET_FB_LOGICAL_H              2532
  #define SWEET_FB_FORMAT_BGRA            0x42475241
  
 +/* defined below with the swap helpers; vinceZeroPresent() needs it earlier */
