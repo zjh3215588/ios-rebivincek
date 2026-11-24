@@ -28,7 +28,7 @@ new file mode 100644
 index 0000000..4533ffd
 --- /dev/null
 +++ b/bsd/kern/topaz_sandbox_container.c
-@@ -0,0 +1,101 @@
+@@ -0,0 +1,133 @@
 +/*
 + * PRIVATE (darwin-redwood bsd/kern/kern_minimac.c, minisandbox_container_path): Sandbox op 4,
 + * "container path of a process", answered from the CFFIXED_USER_HOME its launcher put into
@@ -51,6 +51,30 @@ index 0000000..4533ffd
 +#define SANDBOX_SYSCALL_CONTAINER_PATH  4
 +#define SANDBOX_CONTAINER_VARIABLE      "CFFIXED_USER_HOME="
 +
++static int
++topaz_sandbox_default_home(uid_t uid, user_addr_t buffer, user_size_t size)
++{
++	const char *home;
++	size_t len;
++
++	/* Without a launcher-provided home (CFFIXED_USER_HOME) a system daemon
++	 * still has to be told where its container is: its user's home. Returning
++	 * success with nothing written left cfprefsd and SpringBoard without a
++	 * preferences directory and hung them in their first launch queries. */
++	if (uid == 0) {
++		home = "/private/var/root";
++	} else if (uid == 501) {
++		home = "/private/var/mobile";
++	} else {
++		home = "/private/var";
++	}
++	len = strlen(home);
++	if (len + 1 > size) {
++		return ENAMETOOLONG;
++	}
++	return copyout(home, buffer, len + 1);
++}
++
 +int
 +sweet_sandbox_container_path(user_addr_t arg)
 +{
@@ -72,7 +96,10 @@ index 0000000..4533ffd
 +	size_t argslen, len;
 +	const char *s, *end;
 +	int error;
++	uid_t uid;
++	bool found;
 +
++	found = false;
 +	error = copyin(arg, &args, sizeof(args));
 +	if (error) {
 +		return error;
@@ -81,6 +108,7 @@ index 0000000..4533ffd
 +	if (p == PROC_NULL) {
 +		return ESRCH;
 +	}
++	uid = kauth_cred_getuid(proc_ucred(p));
 +	if (args.check_pidversion && (uint64_t)proc_pidversion(p) != args.pidversion) {
 +		proc_rele(p);
 +		return ESRCH;
@@ -90,7 +118,7 @@ index 0000000..4533ffd
 +	task = proc_task(p);
 +	if (user_stack == 0 || argslen == 0 || task == TASK_NULL) {
 +		proc_rele(p);
-+		return 0;
++		return topaz_sandbox_default_home(uid, args.buffer, args.size);
 +	}
 +	/* the same way as sysctl_procargsx(): the task keeps the map alive once the process is let go */
 +	task_reference(task);
@@ -98,7 +126,7 @@ index 0000000..4533ffd
 +	map = get_task_map_reference(task);
 +	task_deallocate(task);
 +	if (map == VM_MAP_NULL) {
-+		return 0;
++		return topaz_sandbox_default_home(uid, args.buffer, args.size);
 +	}
 +	strings_size = vm_map_round_page(argslen, vm_map_page_mask(map));
 +	if (kmem_alloc(kernel_map, &strings, strings_size, KMA_DATA | KMA_ZERO, VM_KERN_MEMORY_BSD) != KERN_SUCCESS) {
@@ -114,7 +142,7 @@ index 0000000..4533ffd
 +			vm_map_copy_discard(copy);
 +		}
 +		kmem_free(kernel_map, strings, strings_size);
-+		return 0;                       /* the process is on its way out, or has unmapped its own stack */
++		return topaz_sandbox_default_home(uid, args.buffer, args.size);
 +	}
 +
 +	end = (const char *)(strings + strings_size);
@@ -124,12 +152,15 @@ index 0000000..4533ffd
 +			s += prefix_len;
 +			len -= prefix_len;
 +			error = len < args.size ? copyout(s, args.buffer, len + 1) : ENAMETOOLONG;
++			found = true;
 +			break;
 +		}
 +	}
 +	kmem_free(kernel_map, strings, strings_size);
++	if (!found) {
++		error = topaz_sandbox_default_home(uid, args.buffer, args.size);
++	}
 +	return error;
 +}
 -- 
 2.43.0
-
