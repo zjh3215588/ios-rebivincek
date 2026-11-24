@@ -1,0 +1,9 @@
+name: probe
+on:
+  workflow_dispatch:
+jobs:
+  t:
+    runs-on: macos-15
+    timeout-minutes: 5
+    steps:
+      - run: uname -a; sw_vers
